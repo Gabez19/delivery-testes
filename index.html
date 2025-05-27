@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastro com CEP</title>
+</head>
+<body>
+  <h1>Cadastro</h1>
+  <form id="form">
+    <label>CEP: <input type="text" id="cep" /></label><br />
+    <label>Logradouro: <input type="text" id="logradouro" readonly /></label><br />
+    <label>Cidade: <input type="text" id="cidade" readonly /></label><br />
+    <label>UF: <input type="text" id="uf" readonly /></label><br />
+    <button type="submit">Cadastrar</button>
+  </form>
+
+  <script>
+    document.getElementById('cep').addEventListener('blur', async () => {
+      const cep = document.getElementById('cep').value.replace(/\D/g, '');
+      if (cep.length === 8) {
+        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await res.json();
+        if (!data.erro) {
+          document.getElementById('logradouro').value = data.logradouro;
+          document.getElementById('cidade').value = data.localidade;
+          document.getElementById('uf').value = data.uf;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
