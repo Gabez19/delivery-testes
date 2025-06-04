@@ -1,14 +1,13 @@
-const { criarPedido, pedidos } = require('../src/pedido');
+const request = require('supertest');
+const app = require('../api');
 
-describe('CT002 – Pedido com Produtos no Carrinho', () => {
-  test('Deve criar pedido com status "em preparo"', () => {
-    const cliente = { nome: 'Maria', email: 'maria@email.com' };
-    const produtos = [{ nome: 'Alface', preco: 2.50 }, { nome: 'Tomate', preco: 3.00 }];
-    const resultado = criarPedido(cliente, produtos);
-
-    expect(resultado.sucesso).toBe(true);
-    expect(resultado.pedido.status).toBe('em preparo');
-    expect(pedidos.length).toBe(1);
-    expect(pedidos[0].produtos.length).toBe(2);
+describe('CRUD de Produtos', () => {
+  it('deve adicionar um novo produto', async () => {
+    const res = await request(app)
+      .post('/produtos')
+      .send({ nome: 'Pizza', preco: 30.00 });
+    
+    expect(res.statusCode).toEqual(201);
+    expect(res.body).toHaveProperty('nome', 'Pizza');
   });
 });

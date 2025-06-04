@@ -1,12 +1,14 @@
-const { cadastrarCliente, banco } = require('../src/cadastro');
+const request = require('supertest');
+const app = require('../api');
 
-describe('CT001 – Cadastro de Cliente com Sucesso', () => {
-  test('Deve cadastrar cliente com nome, email e senha válidos', () => {
-    const resultado = cadastrarCliente('Maria', 'maria@email.com', 'senha123');
-
-    expect(resultado.sucesso).toBe(true);
-    expect(resultado.mensagem).toBe('Cadastro realizado');
-    expect(banco.length).toBe(1);
-    expect(banco[0].email).toBe('maria@email.com');
+describe('Cadastro de Usuário', () => {
+  it('deve cadastrar um novo usuário com nome, email e CEP', async () => {
+    const res = await request(app)
+      .post('/usuarios')
+      .send({ nome: 'Teste', email: 'teste@email.com', cep: '12345678' });
+    
+    expect(res.statusCode).toEqual(201);
+    expect(res.body).toHaveProperty('usuario');
+    expect(res.body.usuario).toHaveProperty('email', 'teste@email.com');
   });
 });

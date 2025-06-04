@@ -1,15 +1,30 @@
 {
   "name": "delivery-testes",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "api.js",
   "scripts": {
     "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "devDependencies": {
     "jest": "^29.7.0"
-  }
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "sqlite3": "^5.1.7"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gabez19/delivery-testes.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Gabez19/delivery-testes/issues"
+  },
+  "homepage": "https://github.com/Gabez19/delivery-testes#readme",
+  "description": ""
 }

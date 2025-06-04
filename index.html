@@ -2,31 +2,208 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Cadastro com CEP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery Simplificado</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
+    button { padding: 5px 10px; margin-right: 5px; cursor: pointer; }
+    form { margin-bottom: 20px; }
+    input { padding: 5px; margin-right: 10px; }
+  </style>
 </head>
 <body>
-  <h1>Cadastro</h1>
-  <form id="form">
-    <label>CEP: <input type="text" id="cep" /></label><br />
-    <label>Logradouro: <input type="text" id="logradouro" readonly /></label><br />
-    <label>Cidade: <input type="text" id="cidade" readonly /></label><br />
-    <label>UF: <input type="text" id="uf" readonly /></label><br />
-    <button type="submit">Cadastrar</button>
-  </form>
+  <h1>Delivery Simplificado</h1>
+  
+  <div id="loginSection">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" placeholder="Email" required>
+      <button type="submit">Entrar</button>
+    </form>
+    
+    <h2>Cadastro</h2>
+    <form id="cadastroForm">
+      <input type="text" id="cadastroNome" placeholder="Nome" required>
+      <input type="email" id="cadastroEmail" placeholder="Email" required>
+      <input type="text" id="cadastroCep" placeholder="CEP" required>
+      <button type="submit">Cadastrar</button>
+    </form>
+  </div>
+  
+  <div id="appSection" style="display: none;">
+    <h2>Bem-vindo, <span id="userName"></span>!</h2>
+    
+    <h3>Adicionar Produto</h3>
+    <form id="produtoForm">
+      <input type="text" id="produtoNome" placeholder="Nome do produto" required>
+      <input type="number" id="produtoPreco" placeholder="Preço" step="0.01" required>
+      <button type="submit">Adicionar</button>
+    </form>
+    
+    <h3>Lista de Produtos</h3>
+    <div id="produtosList"></div>
+  </div>
 
   <script>
-    document.getElementById('cep').addEventListener('blur', async () => {
-      const cep = document.getElementById('cep').value.replace(/\D/g, '');
-      if (cep.length === 8) {
-        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        const data = await res.json();
-        if (!data.erro) {
-          document.getElementById('logradouro').value = data.logradouro;
-          document.getElementById('cidade').value = data.localidade;
-          document.getElementById('uf').value = data.uf;
+    // Variável para armazenar o usuário logado
+    let usuarioLogado = null;
+    
+    // Elementos do DOM
+    const loginSection = document.getElementById('loginSection');
+    const appSection = document.getElementById('appSection');
+    const userNameSpan = document.getElementById('userName');
+    const produtosList = document.getElementById('produtosList');
+    
+    // Formulário de Login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      
+      try {
+        const response = await fetch('http://localhost:3000/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          usuarioLogado = data.usuario;
+          userNameSpan.textContent = usuarioLogado.nome;
+          loginSection.style.display = 'none';
+          appSection.style.display = 'block';
+          carregarProdutos();
+        } else {
+          alert(data.erro || 'Erro ao fazer login');
         }
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao conectar com o servidor');
       }
     });
+    
+    // Formulário de Cadastro
+    document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('cadastroNome').value;
+      const email = document.getElementById('cadastroEmail').value;
+      const cep = document.getElementById('cadastroCep').value;
+      
+      try {
+        const response = await fetch('http://localhost:3000/usuarios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, email, cep })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          alert('Cadastro realizado com sucesso! Faça login para continuar.');
+          document.getElementById('loginEmail').value = email;
+        } else {
+          alert(data.erro || 'Erro ao cadastrar');
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao conectar com o servidor');
+      }
+    });
+    
+    // Formulário de Produto
+    document.getElementById('produtoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('produtoNome').value;
+      const preco = parseFloat(document.getElementById('produtoPreco').value);
+      
+      try {
+        const response = await fetch('http://localhost:3000/produtos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, preco })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          document.getElementById('produtoNome').value = '';
+          document.getElementById('produtoPreco').value = '';
+          carregarProdutos();
+        } else {
+          alert(data.erro || 'Erro ao adicionar produto');
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao conectar com o servidor');
+      }
+    });
+    
+    // Função para carregar produtos
+    async function carregarProdutos() {
+      try {
+        const response = await fetch('http://localhost:3000/produtos');
+        const produtos = await response.json();
+        
+        produtosList.innerHTML = '';
+        
+        produtos.forEach(produto => {
+          const produtoDiv = document.createElement('div');
+          produtoDiv.className = 'card';
+          produtoDiv.innerHTML = `
+            <h4>${produto.nome} - R$ ${produto.preco.toFixed(2)}</h4>
+            <button onclick="editarProduto(${produto.id})">Editar</button>
+            <button onclick="excluirProduto(${produto.id})">Excluir</button>
+          `;
+          produtosList.appendChild(produtoDiv);
+        });
+      } catch (error) {
+        console.error('Erro:', error);
+      }
+    }
+    
+    // Funções globais para editar/excluir
+    window.editarProduto = async (id) => {
+      const novoNome = prompt('Novo nome:');
+      const novoPreco = parseFloat(prompt('Novo preço:'));
+      
+      if (novoNome && !isNaN(novoPreco)) {
+        try {
+          const response = await fetch(`http://localhost:3000/produtos/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome: novoNome, preco: novoPreco })
+          });
+          
+          if (response.ok) {
+            carregarProdutos();
+          } else {
+            alert('Erro ao editar produto');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+        }
+      }
+    };
+    
+    window.excluirProduto = async (id) => {
+      if (confirm('Tem certeza que deseja excluir este produto?')) {
+        try {
+          const response = await fetch(`http://localhost:3000/produtos/${id}`, {
+            method: 'DELETE'
+          });
+          
+          if (response.ok) {
+            carregarProdutos();
+          } else {
+            alert('Erro ao excluir produto');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+        }
+      }
+    };
   </script>
 </body>
 </html>
